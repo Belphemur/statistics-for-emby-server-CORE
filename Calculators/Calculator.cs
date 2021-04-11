@@ -924,22 +924,36 @@ namespace Statistics.Helpers
             var id = "";
 
             var episodes = GetAllOwnedEpisodes().Where(x => x.DateCreated.DateTime != DateTime.MinValue).ToList();
-            if (episodes.Any())
-            {
-                var youngest = episodes.Aggregate((curMax, x) => (curMax == null || x.DateCreated.DateTime > curMax.DateCreated.DateTime ? x : curMax));
-                if (youngest != null)
+            if (!episodes.Any())
+                return new ValueGroup
                 {
-                    var numberOfTotalDays = DateTime.Now.Date - youngest.DateCreated.DateTime;
+                    Title = Constants.NewestAddedEpisode,
+                    ValueLineOne = valueLineOne,
+                    ValueLineTwo = valueLineTwo,
+                    Size = "half",
+                    Id = id
+                };
 
-                    valueLineOne =
-                        CheckMaxLength(numberOfTotalDays.Days == 0
-                            ? "Today"
-                            : $"{CheckForPlural("day", numberOfTotalDays.Days, "", "", false)} ago");
+            var youngest = episodes.Aggregate((curMax, x) => (curMax == null || x.DateCreated.DateTime > curMax.DateCreated.DateTime ? x : curMax));
+            if (youngest == null)
+                return new ValueGroup
+                {
+                    Title = Constants.NewestAddedEpisode,
+                    ValueLineOne = valueLineOne,
+                    ValueLineTwo = valueLineTwo,
+                    Size = "half",
+                    Id = id
+                };
+            var numberOfTotalDays = DateTime.Now.Date - youngest.DateCreated.DateTime;
 
-                    valueLineTwo = CheckMaxLength($"{youngest.Series?.Name} S{youngest.AiredSeasonNumber} E{youngest.IndexNumber} ");
-                    id = youngest.Id.ToString();
-                }
-            }
+            valueLineOne =
+                CheckMaxLength(numberOfTotalDays.Days == 0
+                    ? "Today"
+                    : $"{CheckForPlural("day", numberOfTotalDays.Days, "", "", false)} ago");
+
+            valueLineTwo = CheckMaxLength($"{youngest.Series?.Name} S{youngest.Season.IndexNumber} E{youngest.IndexNumber} ");
+            id = youngest.Id.ToString();
+            
 
             return new ValueGroup
             {
